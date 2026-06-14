@@ -1,13 +1,13 @@
 # quartz-clickable-images
 
-Lightbox zoom for [Quartz v5](https://github.com/quartz-community/v5) websites.
+Lightbox zoom for [Quartz v5](https://github.com/jackyzha0/quartz/tree/v5) websites.
 
 Images in your notes zoom on hover and open fullscreen on click — similar to Telegram Desktop behavior.
 
 ## Install
 
 ```bash
-npx quartz plugin add github:DreamCutter28/quartz-clickable-images
+npx quartz plugin add github:DreamCutter28/quartz-image-zoom
 ```
 
 ## Features
