@@ -94,7 +94,7 @@ export default defineConfig({
   format: ["esm"],
   dts: true,
   tsconfig: "tsconfig.build.json",
-  sourcemap: true,
+  sourcemap: false,
   clean: true,
   treeshake: true,
   target: "es2022",
