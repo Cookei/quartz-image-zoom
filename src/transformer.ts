@@ -24,8 +24,7 @@ const rehypeLightbox = (): any => {
           ...node.properties,
           className: [...classes, "lightbox-image"],
           "data-src": originalSrc,
-          "data-alt": originalAlt,
-          loading: "lazy",
+          "data-alt": originalAlt
         }
 
         const wrapper: ElementContent = {
