@@ -431,5 +431,3 @@ if (document.readyState === 'loading') {
 };
 
 export { ClickableImages };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map
