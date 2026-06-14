@@ -1,103 +1,243 @@
-import type { PluggableList, Plugin } from "unified";
-import type { Root as MdastRoot } from "mdast";
-import type { Root as HastRoot, Element } from "hast";
+import type { PluggableList } from "unified";
+import type { Root as HastRoot, Element, ElementContent } from "hast";
 import type { VFile } from "vfile";
-import remarkGfm from "remark-gfm";
-import rehypeSlug from "rehype-slug";
-import { findAndReplace } from "mdast-util-find-and-replace";
 import { visit } from "unist-util-visit";
-import type { QuartzTransformerPlugin, BuildCtx } from "@quartz-community/types";
-import type { ExampleTransformerOptions } from "./types";
+import type { QuartzTransformerPlugin } from "@quartz-community/types";
 
-const defaultOptions: ExampleTransformerOptions = {
-  highlightToken: "==",
-  headingClass: "example-plugin-heading",
-  enableGfm: true,
-  addHeadingSlugs: true,
-};
-
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const remarkHighlightToken = (token: string): Plugin<[], MdastRoot> => {
-  const escapedToken = escapeRegExp(token);
-  const pattern = new RegExp(`${escapedToken}([^\n]+?)${escapedToken}`, "g");
-  return () => (tree: MdastRoot, _file: VFile) => {
-    findAndReplace(tree, [
-      [
-        pattern,
-        (_match: string, value: string) => ({
-          type: "strong",
-          children: [{ type: "text", value }],
-        }),
-      ],
-    ]);
-  };
-};
-
-const rehypeHeadingClass = (className: string): Plugin<[], HastRoot> => {
+const rehypeLightbox = (): any => {
   return () => (tree: HastRoot, _file: VFile) => {
-    visit(tree, "element", (node: Element) => {
-      if (!/^h[1-6]$/.test(node.tagName)) {
-        return;
+    visit(tree, "element", (node: Element, index, parent: any) => {
+      if (node.tagName === "img" && parent && index !== undefined) {
+        const originalSrc = node.properties?.src
+        const originalAlt = node.properties?.alt || ""
+
+        if (!originalSrc) return
+
+        const existing = node.properties?.className
+        const classes: string[] = Array.isArray(existing)
+          ? existing.filter((v): v is string => typeof v === "string")
+          : typeof existing === "string"
+            ? [existing]
+            : []
+
+        node.properties = {
+          ...node.properties,
+          className: [...classes, "lightbox-image"],
+          "data-src": originalSrc,
+          "data-alt": originalAlt,
+          loading: "lazy",
+        }
+
+        const wrapper: ElementContent = {
+          type: "element",
+          tagName: "div",
+          properties: {
+            className: ["lightbox-wrapper"],
+            "data-lightbox": "true",
+          },
+          children: [node],
+        }
+
+        parent.children[index] = wrapper
       }
+    })
+  }
+}
 
-      const existing = node.properties?.className;
-      const classes: string[] = Array.isArray(existing)
-        ? existing.filter((value): value is string => typeof value === "string")
-        : typeof existing === "string"
-          ? [existing]
-          : [];
-      node.properties = {
-        ...node.properties,
-        className: [...classes, className],
-      };
-    });
-  };
-};
-
-/**
- * Example transformer showing remark/rehype usage and resource injection.
- */
-export const ExampleTransformer: QuartzTransformerPlugin<Partial<ExampleTransformerOptions>> = (
-  userOptions?: Partial<ExampleTransformerOptions>,
-) => {
-  const options = { ...defaultOptions, ...userOptions };
+export const ClickableImages: QuartzTransformerPlugin = () => {
   return {
-    name: "ExampleTransformer",
-    textTransform(_ctx: BuildCtx, src: string) {
-      return src.endsWith("\n") ? src : `${src}\n`;
-    },
-    markdownPlugins(): PluggableList {
-      const plugins: PluggableList = [remarkHighlightToken(options.highlightToken)];
-      if (options.enableGfm) {
-        plugins.unshift(remarkGfm);
-      }
-      return plugins;
-    },
+    name: "ClickableImages",
     htmlPlugins(): PluggableList {
-      const plugins: PluggableList = [rehypeHeadingClass(options.headingClass)];
-      if (options.addHeadingSlugs) {
-        plugins.unshift(rehypeSlug);
-      }
-      return plugins;
+      return [rehypeLightbox()]
     },
     externalResources() {
       return {
         css: [
           {
-            content: `.${options.headingClass} { letter-spacing: 0.02em; }`,
             inline: true,
+            content: `
+.lightbox-wrapper {
+  display: inline-block;
+  cursor: zoom-in;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.lightbox-wrapper:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.lightbox-image { max-width: 100%; height: auto; display: block; }
+.lightbox-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+.lightbox-modal.active { opacity: 1; visibility: visible; }
+.lightbox-modal img {
+  max-width: 92vw;
+  max-height: 92vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  transition: transform 0.2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: auto;
+}
+.lightbox-close {
+  position: absolute;
+  top: 20px; right: 24px;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-close:hover { background: rgba(0,0,0,0.8); }
+body.lightbox-open { overflow: hidden; }
+            `,
           },
         ],
         js: [
           {
-            contentType: "inline",
             loadTime: "afterDOMReady",
-            script: "document.documentElement.dataset.exampleTransformer = 'true'",
+            contentType: "inline",
+            script: `
+function initLightbox() {
+  const existing = document.querySelector('.lightbox-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.className = 'lightbox-modal';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'lightbox-close';
+  closeBtn.innerHTML = '×';
+  closeBtn.setAttribute('aria-label', 'Close');
+
+  const img = document.createElement('img');
+  img.style.display = 'none';
+
+  modal.appendChild(closeBtn);
+  modal.appendChild(img);
+  document.body.appendChild(modal);
+
+  function open(src, alt) {
+    img.src = src;
+    img.alt = alt || '';
+    img.style.display = 'block';
+    img.style.transform = 'scale(1)';
+    img.style.cursor = 'grab';
+    translateX = 0;
+    translateY = 0;
+    scale = 1;
+    modal.classList.add('active');
+    document.body.classList.add('lightbox-open');
+  }
+
+  function close() {
+    modal.classList.remove('active');
+    document.body.classList.remove('lightbox-open');
+    setTimeout(() => { img.style.display = 'none'; img.src = ''; }, 200);
+  }
+
+  // zoom & pan state
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragOriginX = 0;
+  let dragOriginY = 0;
+
+  function applyTransform() {
+    img.style.transform = 'scale(' + scale + ') translate(' + translateX / scale + 'px, ' + translateY / scale + 'px)';
+  }
+
+  // zoom by wheel
+  img.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    scale = Math.min(Math.max(scale + delta, 0.5), 5);
+    applyTransform();
+  }, { passive: false });
+
+  // pan by drag
+  img.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    if (scale <= 1) return;
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragOriginX = translateX;
+    dragOriginY = translateY;
+    img.style.cursor = 'grabbing';
+    img.style.transition = 'none';
+    e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    translateX = dragOriginX + (e.clientX - dragStartX);
+    translateY = dragOriginY + (e.clientY - dragStartY);
+    applyTransform();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    img.style.cursor = scale > 1 ? 'grab' : 'default';
+    img.style.transition = 'transform 0.2s ease';
+  });
+
+  closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) close();
+  });
+
+  document.querySelectorAll('.lightbox-wrapper').forEach(wrapper => {
+    wrapper.addEventListener('click', () => {
+      const i = wrapper.querySelector('.lightbox-image');
+      if (i) open(i.src, i.getAttribute('data-alt') || i.alt);
+    });
+  });
+
+  if (window.addCleanup) {
+    window.addCleanup(() => {
+      modal.remove();
+      document.body.classList.remove('lightbox-open');
+    });
+  }
+}
+
+document.addEventListener('nav', initLightbox);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLightbox);
+} else {
+  initLightbox();
+}
+            `,
           },
         ],
         additionalHead: [],
-      };
+      }
     },
-  };
-};
+  }
+}

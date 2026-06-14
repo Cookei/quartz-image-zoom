@@ -1,9 +1,6 @@
 import { defineConfig } from "tsup";
 import type { Plugin } from "esbuild";
 import path from "path";
-import { validateManifest } from "./src/build/validate-manifest";
-
-validateManifest();
 
 /**
  * Esbuild plugin that bundles `.inline.ts` files into browser-ready JavaScript strings.
@@ -93,8 +90,6 @@ const SINGLETON_EXTERNALS = [
 export default defineConfig({
   entry: {
     index: "src/index.ts",
-    types: "src/types.ts",
-    "components/index": "src/components/index.ts",
   },
   format: ["esm"],
   dts: true,
