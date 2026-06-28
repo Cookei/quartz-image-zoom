@@ -7,25 +7,26 @@ import type { QuartzTransformerPlugin } from "@quartz-community/types";
 const rehypeLightbox = (): any => {
   return () => (tree: HastRoot, _file: VFile) => {
     visit(tree, "element", (node: Element, index, parent: any) => {
+      if (node.tagName === "img" && node.properties?.["data-lightbox-ignore"] != null) return;
       if (node.tagName === "img" && parent && index !== undefined) {
-        const originalSrc = node.properties?.src
-        const originalAlt = node.properties?.alt || ""
+        const originalSrc = node.properties?.src;
+        const originalAlt = node.properties?.alt || "";
 
-        if (!originalSrc) return
+        if (!originalSrc) return;
 
-        const existing = node.properties?.className
+        const existing = node.properties?.className;
         const classes: string[] = Array.isArray(existing)
           ? existing.filter((v): v is string => typeof v === "string")
           : typeof existing === "string"
             ? [existing]
-            : []
+            : [];
 
         node.properties = {
           ...node.properties,
           className: [...classes, "lightbox-image"],
           "data-src": originalSrc,
-          "data-alt": originalAlt
-        }
+          "data-alt": originalAlt,
+        };
 
         const wrapper: ElementContent = {
           type: "element",
@@ -35,19 +36,19 @@ const rehypeLightbox = (): any => {
             "data-lightbox": "true",
           },
           children: [node],
-        }
+        };
 
-        parent.children[index] = wrapper
+        parent.children[index] = wrapper;
       }
-    })
-  }
-}
+    });
+  };
+};
 
 export const ClickableImages: QuartzTransformerPlugin = () => {
   return {
     name: "ClickableImages",
     htmlPlugins(): PluggableList {
-      return [rehypeLightbox()]
+      return [rehypeLightbox()];
     },
     externalResources() {
       return {
@@ -63,7 +64,7 @@ export const ClickableImages: QuartzTransformerPlugin = () => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .lightbox-wrapper:hover {
-  transform: scale(1.03);
+  transform: scale(1.01);
   box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 .lightbox-image { max-width: 100%; height: auto; display: block; }
@@ -236,7 +237,7 @@ if (document.readyState === 'loading') {
           },
         ],
         additionalHead: [],
-      }
+      };
     },
-  }
-}
+  };
+};
