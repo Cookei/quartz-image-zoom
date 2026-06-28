@@ -205,6 +205,7 @@ function visit(tree, testOrVisitor, visitorOrReverse, maybeReverse) {
 var rehypeLightbox = () => {
   return () => (tree, _file) => {
     visit(tree, "element", (node, index, parent) => {
+      if (node.tagName === "img" && node.properties?.["data-lightbox-ignore"] != null) return;
       if (node.tagName === "img" && parent && index !== void 0) {
         const originalSrc = node.properties?.src;
         const originalAlt = node.properties?.alt || "";
@@ -251,7 +252,7 @@ var ClickableImages = () => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .lightbox-wrapper:hover {
-  transform: scale(1.03);
+  transform: scale(1.01);
   box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 .lightbox-image { max-width: 100%; height: auto; display: block; }
