@@ -7,7 +7,7 @@ import type { QuartzTransformerPlugin } from "@quartz-community/types";
 const rehypeLightbox = (): any => {
   return () => (tree: HastRoot, _file: VFile) => {
     visit(tree, "element", (node: Element, index, parent: any) => {
-      if (node.tagName === "img" && node.properties?.["data-lightbox-ignore"]) return;
+      if (node.tagName === "img" && node.properties?.dataLightboxIgnore) return;
       if (node.tagName === "img" && parent && index !== undefined) {
         const originalSrc = node.properties?.src;
         const originalAlt = node.properties?.alt || "";

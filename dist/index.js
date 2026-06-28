@@ -205,7 +205,7 @@ function visit(tree, testOrVisitor, visitorOrReverse, maybeReverse) {
 var rehypeLightbox = () => {
   return () => (tree, _file) => {
     visit(tree, "element", (node, index, parent) => {
-      if (node.tagName === "img" && node.properties?.["data-lightbox-ignore"]) return;
+      if (node.tagName === "img" && node.properties?.dataLightboxIgnore) return;
       if (node.tagName === "img" && parent && index !== void 0) {
         const originalSrc = node.properties?.src;
         const originalAlt = node.properties?.alt || "";
