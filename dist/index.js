@@ -330,7 +330,7 @@ function initLightbox() {
     img.alt = alt || '';
     img.style.display = 'block';
     img.style.transform = 'scale(1)';
-    img.style.cursor = 'grab';
+    img.style.cursor = 'var(--grab-cursor)';
     translateX = 0;
     translateY = 0;
     scale = 1;
@@ -375,7 +375,7 @@ function initLightbox() {
     dragStartY = e.clientY;
     dragOriginX = translateX;
     dragOriginY = translateY;
-    img.style.cursor = 'grabbing';
+    img.style.cursor = 'var(--grabbing-cursor)';
     img.style.transition = 'none';
     e.stopPropagation();
   });
@@ -390,7 +390,7 @@ function initLightbox() {
   document.addEventListener('mouseup', () => {
     if (!isDragging) return;
     isDragging = false;
-    img.style.cursor = scale > 1 ? 'grab' : 'default';
+    img.style.cursor = scale > 1 ? 'var(--grab-cursor)' : 'var(--default-cursor)';
     img.style.transition = 'transform 0.2s ease';
   });
 
