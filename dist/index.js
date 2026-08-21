@@ -246,7 +246,7 @@ var ClickableImages = () => {
             content: `
 .lightbox-wrapper {
   display: inline-block;
-  cursor: zoom-in;
+  cursor: var(--zoom-in-cursor);
   border-radius: 6px;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -264,7 +264,7 @@ var ClickableImages = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: zoom-out;
+  cursor: var(--zoom-out-cursor);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
